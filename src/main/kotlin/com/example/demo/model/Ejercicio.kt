@@ -27,4 +27,3 @@ data class Ejercicio(
 
 
 
-// todo tenemos que ver que mas añadir a la clase usuario

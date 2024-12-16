@@ -16,12 +16,7 @@ class TokenService {
     @Autowired
     private lateinit var jwtEncoder: JwtEncoder
 
-    /**
-     * Genera un token JWT basado en la autenticación proporcionada.
-     *
-     * @param authentication Información de autenticación del usuario.
-     * @return Token JWT como String.
-     */
+
     fun generarToken(authentication: Authentication): String {
         // Obtener los roles del usuario y convertirlos a un formato único
         val roles: String = authentication.authorities

@@ -11,8 +11,9 @@ import org.springframework.stereotype.Service
 @Service
 class PlanEntrenamientoService(private val planEntrenamientoRepository: PlanEntrenamientoRepository) {
 
-    // todo tenemos que mirar lo de AUTOWIRED y como implementarlo
 
+
+    //todo
 
     fun findAll(): List<PlanEntrenamiento> {
         return planEntrenamientoRepository.findAll()

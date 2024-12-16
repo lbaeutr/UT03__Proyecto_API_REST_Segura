@@ -44,10 +44,16 @@ class UsuarioController {
         return usuarioService.save(usuario)
     }
 
+
+
+
     @PutMapping("/{id}")
     fun updateUsuario(@PathVariable id: Long, @RequestBody usuario: Usuario): ResponseEntity<Usuario> {
         val existingUsuario = usuarioService.findById(id)
-        return if (existingUsuario != null) {
+        return if (usuario.username.isNullOrBlank() || usuario.password.isNullOrBlank()) {
+            ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(null)
+        } else if (existingUsuario != null) {
             val updatedUsuario = usuario.copy(id = id)
             ResponseEntity.ok(usuarioService.save(updatedUsuario))
         } else {
@@ -55,13 +61,14 @@ class UsuarioController {
         }
     }
 
+
     @DeleteMapping("/{id}")
-    fun deleteUsuario(@PathVariable id: Long): ResponseEntity<Void> {
+    fun deleteUsuario(@PathVariable id: Long): ResponseEntity<Map<String, String>> {
         return if (usuarioService.findById(id) != null) {
             usuarioService.deleteById(id)
-            ResponseEntity.noContent().build()
+            ResponseEntity.ok(mapOf("mensaje" to "Usuario eliminado correctamente"))
         } else {
-            ResponseEntity.notFound().build()
+            ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("mensaje" to "Usuario no encontrado"))
         }
     }
 
@@ -72,25 +79,30 @@ class UsuarioController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(mapOf("mensaje" to "Username y password son requeridos"))
             }
+
             val authentication = authenticationManager.authenticate(
                 UsernamePasswordAuthenticationToken(usuario.username, usuario.password)
             )
             val token = tokenService.generarToken(authentication)
             ResponseEntity.ok(mapOf("token" to token))
         } catch (e: AuthenticationException) {
-            print(usuario)
-            println(usuarioService.findById(1))
             ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(mapOf("mensaje" to "Credenciales incorrectas"))
         }
     }
 
     @PostMapping("/register")
-    fun register(@RequestBody usuario: Usuario
+    fun register(
+        @RequestBody usuario: Usuario
     ): ResponseEntity<Any> {
         return try {
             if (usuario.username.isNullOrBlank() || usuario.password.isNullOrBlank()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(mapOf("mensaje" to "Username y password son requeridos"))
+            }
+            val existingUsuario = usuarioService.loadUserByUsername(usuario.username!!)
+            if (existingUsuario != null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(mapOf("mensaje" to "El usuario ya existe en la base de datos"))
             }
             val savedUsuario = usuarioService.save(usuario)
             ResponseEntity.status(HttpStatus.CREATED).body(savedUsuario)

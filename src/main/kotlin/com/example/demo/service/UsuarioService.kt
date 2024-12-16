@@ -14,6 +14,8 @@ import org.springframework.security.core.userdetails.UserDetailsService
 @Service
 class UsuarioService : UserDetailsService {
 
+    // todo
+
     @Autowired
     lateinit var usuarioRepository: UsuarioRepository
 
@@ -45,6 +47,8 @@ class UsuarioService : UserDetailsService {
 
         return User(usuario.username, usuario.password, emptyList())
     }
+
+
 
 
 }

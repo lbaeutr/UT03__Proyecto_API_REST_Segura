@@ -25,4 +25,3 @@ data class PlanEntrenamiento(
 )
 
 
-// todo tenemos que ver que mas añadir a la clase plan de entrenamiento

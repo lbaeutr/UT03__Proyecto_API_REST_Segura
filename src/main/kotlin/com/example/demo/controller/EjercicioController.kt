@@ -1,7 +1,6 @@
 package com.example.demo.controller
 
 
-
 import com.example.demo.model.Ejercicio
 import com.example.demo.service.EjercicioService
 import org.springframework.http.ResponseEntity
@@ -26,16 +25,19 @@ class EjercicioController(private val ejercicioService: EjercicioService) {
         }
     }
 
+
     @PostMapping
-    fun createEjercicio(@RequestBody ejercicio: Ejercicio): Ejercicio {
-        return ejercicioService.save(ejercicio)
+    fun createEjercicio(@RequestBody ejercicio: Ejercicio): ResponseEntity<Ejercicio> {
+        val savedEjercicio = ejercicioService.save(ejercicio)
+        return ResponseEntity.status(201).body(savedEjercicio)
     }
 
     @PutMapping("/{id}")
     fun updateEjercicio(@PathVariable id: Long, @RequestBody ejercicio: Ejercicio): ResponseEntity<Ejercicio> {
         val existingEjercicio = ejercicioService.findById(id)
         return if (existingEjercicio != null) {
-            val updatedEjercicio = ejercicio.copy(id = id) // Creamos una copia con el mismo ID como ha pasado en usuario controller y plan controller
+            val updatedEjercicio =
+                ejercicio.copy(id = id) // Creamos una copia con el mismo ID como ha pasado en usuario controller y plan controller
             ResponseEntity.ok(ejercicioService.save(updatedEjercicio))
         } else {
             ResponseEntity.notFound().build()

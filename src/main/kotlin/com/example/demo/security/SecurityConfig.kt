@@ -38,58 +38,49 @@ class SecurityConfig {
         return authenticationConfiguration.authenticationManager
     }
 
-//    @Bean
-//    fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
-//        return http
-//            //.csrf { csrf -> csrf.disable() }
-//            .authorizeHttpRequests { auth -> auth
-//                .requestMatchers(HttpMethod.POST,"/usuarios/login").permitAll()
-//
-//                //.requestMatchers(HttpMethod.GET, "/usuarios").hasRole("CLIENTE")
-////                .requestMatchers(HttpMethod.GET, "/usuarios/{id}").authenticated()
-////                .requestMatchers(HttpMethod.PUT, "/usuarios/{id}").hasRole("CLIENTE")
-////                .requestMatchers(HttpMethod.DELETE, "/usuarios/{id}").hasRole("CLIENTE")
-//                .anyRequest().permitAll()
-//            }
-////            .csrf { csrf -> csrf.disable() }
-////            .authorizeHttpRequests { auth -> auth
-////                .anyRequest().permitAll()
-////            }
-//            //.oauth2ResourceServer { oauth2 -> oauth2.jwt(Customizer.withDefaults()) }
-//            //.sessionManagement { session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
-//            //.httpBasic(Customizer.withDefaults())
-//            .build()
-//    }
-
 
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         return http
-            //.cors(Customizer.withDefaults()) // Habilitar CORS
-            .csrf { csrf -> csrf.disable() } // Deshabilitar CSRF si es necesario
-            .authorizeHttpRequests { auth -> auth
-                .requestMatchers(HttpMethod.POST, "/usuarios/login", "/usuarios/register").permitAll()
-                .requestMatchers( "/usuarios/listar").hasRole("ENTRENADOR")
+            .csrf { csrf -> csrf.disable() } // Deshabilitar CSRF si no es necesario (por ejemplo, para APIs REST)
+            .authorizeHttpRequests { auth ->
+                auth
+                    // Endpoints públicos para login y registro
+                    .requestMatchers(HttpMethod.POST, "/usuarios/login", "/usuarios/register").permitAll()
 
-                // .requestMatchers("/usuarios/**").permitAll()
+                    // Permitir a ENTRENADORES crear, modificar y eliminar planes
+                    .requestMatchers(HttpMethod.POST, "/planes").hasRole("ENTRENADOR")
+                    .requestMatchers(HttpMethod.PUT, "/planes/{id}").hasRole("ENTRENADOR")
+                    .requestMatchers(HttpMethod.DELETE, "/planes/{id}").hasRole("ENTRENADOR")
 
-//                .requestMatchers(HttpMethod.POST,"/planes").permitAll()
-//
-//                .requestMatchers(HttpMethod.POST,"/usuarios/login").permitAll()
-//                .requestMatchers(HttpMethod.GET, "/usuarios/listar").permitAll()
-//                .requestMatchers(HttpMethod.GET, "/usuarios/{id}").permitAll()
+                    // Permitir a ENTRENADORES administrar ejercicios
+                    .requestMatchers(HttpMethod.POST, "/ejercicios").hasRole("ENTRENADOR")
+                    .requestMatchers(HttpMethod.PUT, "/ejercicios/{id}").hasRole("ENTRENADOR")
+                    .requestMatchers(HttpMethod.DELETE, "/ejercicios/{id}").hasRole("ENTRENADOR")
 
+                    // Permitir a CLIENTES y ENTRENADORES acceder a planes y ejercicios (solo lectura)
+                    .requestMatchers(HttpMethod.GET, "/planes").authenticated()
+                    .requestMatchers(HttpMethod.GET, "/planes/{id}").authenticated()
+                    .requestMatchers(HttpMethod.GET, "/ejercicios").authenticated()
+                    .requestMatchers(HttpMethod.GET, "/ejercicios/{id}").authenticated()
 
+                    // Control de acceso para usuarios
+                    .requestMatchers(HttpMethod.GET, "/usuarios/{id}").authenticated() // Acceso a sus propios datos
+                    .requestMatchers(HttpMethod.POST, "/usuarios/crear").hasRole("ENTRENADOR") // Solo ENTRENADORES pueden crear usuarios
 
-
-
-                 .anyRequest().authenticated()
+                    // Asegurar que cualquier otra solicitud esté autenticada
+                    .anyRequest().authenticated()
             }
-           .oauth2ResourceServer { oauth2 -> oauth2.jwt(Customizer.withDefaults()) }
-           .sessionManagement { session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
-           .httpBasic(Customizer.withDefaults())
+            .oauth2ResourceServer { oauth2 ->
+                oauth2.jwt(Customizer.withDefaults())
+            }
+            .sessionManagement { session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            }
+            .httpBasic(Customizer.withDefaults())
             .build()
     }
+
 
     @Bean
     fun jwtEncoder(rsaKeysProperties: RSAKeysProperties): JwtEncoder {
